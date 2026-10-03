@@ -68,7 +68,7 @@ Frontend UI: http://localhost:3000 (atau port sesuai konfigurasi framework front
 
 ----
 
-## 🗄️ Database Setup — Membuat Database Smart Inclusive Ed
+### 🗄️ Database Setup — Membuat Database Smart Inclusive Ed
 
 Smart Inclusive Ed menggunakan **MySQL** sebagai database untuk menyimpan data pengguna, kelas, materi pembelajaran, tugas, progres belajar, dan notifikasi.
 
