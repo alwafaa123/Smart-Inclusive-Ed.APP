@@ -27,3 +27,4 @@ Smart-Inclusive-Ed.APP/
 ├── 📁 database/      # Skema basis data dan migrasi
 ├── 📁 frontend/      # Antarmuka pengguna (User Interface) berbasis web
 └── 📄 .gitignore     # Pengaturan file yang diabaikan oleh Git
+
