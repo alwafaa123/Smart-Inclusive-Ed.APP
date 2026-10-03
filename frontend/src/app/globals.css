@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SMART INCLUSIVE ED — Global Styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Design tokens ────────────────────────────────────────────────────────── */
+:root {
+  --brand-primary:   #2563eb;
+  --brand-secondary: #0ea5e9;
+  --brand-accent:    #6366f1;
+  --brand-success:   #22c55e;
+  --brand-warning:   #f59e0b;
+  --brand-danger:    #ef4444;
+
+  --radius-card:  1rem;
+  --radius-btn:   0.625rem;
+  --shadow-card:  0 1px 3px 0 rgb(0 0 0 / .08), 0 1px 2px -1px rgb(0 0 0 / .06);
+  --shadow-hover: 0 4px 12px 0 rgb(37 99 235 / .12);
+
+  /* Accessibility tokens (overridden by AccessibilityProvider) */
+  --access-font-size:   18px;
+  --access-line-height: 1.8;
+  --access-font-family: inherit;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Soft color accents along dashboard lower corners */
+.dashboard-page {
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard-page::before,
+.dashboard-page::after {
+  position: absolute;
+  bottom: 0;
+  z-index: 0;
+  width: min(34rem, 75vw);
+  height: 19rem;
+  content: "";
+  filter: blur(28px);
+  pointer-events: none;
+}
+
+.dashboard-page::before {
+  left: 0;
+  background: radial-gradient(
+    ellipse at bottom left,
+    rgb(99 102 241 / 18%),
+    rgb(59 130 246 / 10%) 42%,
+    transparent 72%
+  );
+}
+
+.dashboard-page::after {
+  right: 0;
+  background: radial-gradient(
+    ellipse at bottom right,
+    rgb(14 165 233 / 16%),
+    rgb(99 102 241 / 9%) 42%,
+    transparent 72%
+  );
+}
+
+.dashboard-page > .dashboard-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Accessibility: text layer ───────────────────────────────────────────── */
+.accessibility-text {
+  font-size:   var(--access-font-size, 18px);
+  line-height: var(--access-line-height, 1.8);
+  font-family: var(--access-font-family, inherit);
+}
+
+/* ── Accessibility: high-contrast mode ───────────────────────────────────── */
+.accessibility-high-contrast,
+.accessibility-high-contrast main,
+.accessibility-high-contrast section,
+.accessibility-high-contrast article,
+.accessibility-high-contrast header,
+.accessibility-high-contrast nav {
+  background-color: #000 !important;
+  color: #fde68a !important;
+}
+
+.accessibility-high-contrast a {
+  color: #93c5fd !important;
+  text-decoration: underline;
+}
+
+.accessibility-high-contrast button {
+  border: 2px solid currentColor !important;
+}
+
+.accessibility-high-contrast .dashboard-page::before,
+.accessibility-high-contrast .dashboard-page::after {
+  display: none;
+}
+
+.accessibility-high-contrast input,
+.accessibility-high-contrast textarea,
+.accessibility-high-contrast select {
+  color: #000 !important;
+  background-color: #fff !important;
+  border: 2px solid #fde68a !important;
+}
+
+/* ── Focus ring (keyboard navigation) ───────────────────────────────────── */
+:focus-visible {
+  outline: 3px solid var(--brand-primary) !important;
+  outline-offset: 3px;
+}
+
+button:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--brand-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-btn);
+}
+
+/* ── Smooth card hover ───────────────────────────────────────────────────── */
+.card-interactive {
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.card-interactive:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* ── Gradient text utility ───────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Skeleton loader ─────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 0.5rem;
+}
+
+/* ── Progress bar fill animation ─────────────────────────────────────────── */
+@keyframes grow-width {
+  from { width: 0%; }
+}
+
+.progress-bar-fill {
+  animation: grow-width 0.6s ease-out forwards;
+}
+
+/* ── Fade-in ─────────────────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* ── Badge pulse ─────────────────────────────────────────────────────────── */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.15); }
+}
+
+.badge-pulse {
+  animation: badge-pulse 1.6s ease-in-out infinite;
+}
+
+/* ── Scrollbar styling (webkit) ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ── Reduce motion ───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration:       0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:      0.01ms !important;
+  }
+}
