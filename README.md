@@ -355,7 +355,7 @@ Jangan gunakan akun demo untuk menyimpan data pribadi atau data siswa sungguhan.
 
 ---
 
-## ✅ Checklist Sebelum Aplikasi Dicoba :
+### ✅ Checklist Sebelum Aplikasi Dicoba :
 
 * [x] Repository GitHub dapat di-clone.
 * [x] File `database/smart_inclusive_ed.sql` tersedia.
@@ -367,7 +367,7 @@ Jangan gunakan akun demo untuk menyimpan data pribadi atau data siswa sungguhan.
 * [x] Fitur utama telah diuji menggunakan data demo.
 * [x] File `.env` dan kata sandi asli tidak disertakan dalam repositori publik.
 
-Dengan menyediakan file SQL dan akun demo, proses pengujian aplikasi menjadi lebih praktis dan dapat langsung mengeksplorasi fitur Smart Inclusive Ed.
+#### Dengan menyediakan file SQL dan akun demo, proses pengujian aplikasi menjadi lebih praktis dan dapat langsung mengeksplorasi fitur Smart Inclusive Ed.
 ----
 
 
