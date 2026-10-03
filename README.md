@@ -7,7 +7,7 @@
 [![Tech Stack](https://img.shields.io/badge/Stack-JavaScript%20%7C%20Node.js-blue?style=for-the-badge&logo=javascript)](https://github.com/alwafaa123/Smart-Inclusive-Ed.APP)
 [![License](https://img.shields.io/badge/License-MIT-blueviolet?style=for-the-badge)](LICENSE)
 
-*Mewujudkan ekosistem pembelajaran yang ramah akses, inklusif, dan adaptif untuk semua kalangan.*
+*Mewujudkan ekosistem pembelajaran yang ramah akses, inklusif, dan adaptif untuk semua kalangan Menuju indonesia Emas yang Maju.*
 
 </div>
 
@@ -27,3 +27,5 @@ Smart-Inclusive-Ed.APP/
 ├── 📁 database/      # Skema basis data dan migrasi
 ├── 📁 frontend/      # Antarmuka pengguna (User Interface) berbasis web
 └── 📄 .gitignore     # Pengaturan file yang diabaikan oleh Git
+
+
