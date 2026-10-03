@@ -337,7 +337,7 @@ Jika seluruh tabel sudah tersedia, database telah berhasil dibuat.
 
 ---
 
-## 👥 Menyiapkan Akun Demo untuk Juri
+### 👥 Menyiapkan Akun Demo untuk dicoba
 
 Agar juri dapat mencoba seluruh fitur aplikasi, sediakan akun demo dengan peran berbeda:
 
