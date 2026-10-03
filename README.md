@@ -36,7 +36,7 @@ cd Smart-Inclusive-Ed.APP
 3. Konfigurasi & Menjalankan Backend
 Arahkan terminal ke folder backend, lalu instal dependensi yang dibutuhkan dan jalankan server:
 
-# Masuk ke folder backend
+## Masuk ke folder backend
 cd backend
 
 # Instal dependensi Node.js
