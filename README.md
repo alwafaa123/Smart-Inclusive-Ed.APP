@@ -20,6 +20,54 @@ Repositori ini disusun menggunakan struktur monorepo yang mencakup komponen **fr
 
 ---
 
+🚀 Panduan Instalasi & Cara Menjalankan
+Ikuti langkah-langkah di bawah ini untuk mengunduh dan menjalankan aplikasi secara lokal:
+
+1. Kloning Repositori (git clone)
+Buka terminal atau command prompt Anda, lalu jalankan perintah berikut untuk mengunduh kode sumber dari GitHub:
+
+git clone [https://github.com/alwafaa123/Smart-Inclusive-Ed.APP.git](https://github.com/alwafaa123/Smart-Inclusive-Ed.APP.git)
+
+2. Masuk ke Direktori Proyek
+Pindahkan direktori aktif terminal Anda ke folder proyek yang baru saja diunduh:
+
+cd Smart-Inclusive-Ed.APP
+
+3. Konfigurasi & Menjalankan Backend
+Arahkan terminal ke folder backend, lalu instal dependensi yang dibutuhkan dan jalankan server:
+
+# Masuk ke folder backend
+cd backend
+
+# Instal dependensi Node.js
+npm install
+
+# Jalankan server backend
+npm start
+
+(Catatan: Pastikan server backend berjalan dengan sukses sebelum melanjutkan ke tahap frontend).
+
+4. Konfigurasi & Menjalankan Frontend
+Buka tab atau jendela terminal baru, arahkan ke direktori frontend, instal dependensi, lalu jalankan antarmuka web:
+
+# Masuk ke folder frontend (dari akar direktori proyek)
+cd frontend
+
+# Instal dependensi
+npm install
+
+# Jalankan mode pengembangan (development)
+npm run dev
+
+5. Akses Aplikasi di Peramban
+Setelah server frontend dan backend aktif, buka peramban web (browser) Anda dan akses tautan berikut:
+
+Frontend UI: http://localhost:3000 (atau port sesuai konfigurasi framework frontend Anda)
+
+👥 Kontributor
+Fattahul Halim Alwafaa - Developer Utama - alwafaa123
+
+----
 ## 📂 Struktur Proyek
 ```text
 Smart-Inclusive-Ed.APP/
