@@ -36,13 +36,13 @@ cd Smart-Inclusive-Ed.APP
 3. Konfigurasi & Menjalankan Backend
 Arahkan terminal ke folder backend, lalu instal dependensi yang dibutuhkan dan jalankan server:
 
-## Masuk ke folder backend
+### Masuk ke folder backend
 cd backend
 
-# Instal dependensi Node.js
+### Instal dependensi Node.js
 npm install
 
-# Jalankan server backend
+### Jalankan server backend
 npm start
 
 (Catatan: Pastikan server backend berjalan dengan sukses sebelum melanjutkan ke tahap frontend).
@@ -50,13 +50,13 @@ npm start
 4. Konfigurasi & Menjalankan Frontend
 Buka tab atau jendela terminal baru, arahkan ke direktori frontend, instal dependensi, lalu jalankan antarmuka web:
 
-# Masuk ke folder frontend (dari akar direktori proyek)
+### Masuk ke folder frontend (dari akar direktori proyek)
 cd frontend
 
-# Instal dependensi
+### Instal dependensi
 npm install
 
-# Jalankan mode pengembangan (development)
+### Jalankan mode pengembangan (development)
 npm run dev
 
 5. Akses Aplikasi di Peramban
