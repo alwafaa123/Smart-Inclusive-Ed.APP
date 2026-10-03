@@ -6,7 +6,9 @@
 [![GitHub Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge&logo=github)](https://github.com/alwafaa123/Smart-Inclusive-Ed.APP)
 [![Tech Stack](https://img.shields.io/badge/Stack-JavaScript%20%7C%20Node.js-blue?style=for-the-badge&logo=javascript)](https://github.com/alwafaa123/Smart-Inclusive-Ed.APP)
 [![License](https://img.shields.io/badge/License-MIT-blueviolet?style=for-the-badge)](LICENSE)
+<p align="center"> <strong>One Platform. Equal Access. Unlimited Possibilities.</strong> </p>
 
+<p align="center"> Aplikasi web pembelajaran digital inklusif yang dirancang untuk menghadirkan pengalaman belajar yang lebih mudah diakses, personal, dan terorganisasi bagi setiap siswa. </p>
 *Mewujudkan ekosistem pembelajaran yang ramah akses, inklusif, dan adaptif untuk semua kalangan Menuju indonesia Emas yang Maju.*
 
 </div>
