@@ -372,8 +372,11 @@ Jangan gunakan akun demo untuk menyimpan data pribadi atau data siswa sungguhan.
 
 
 👥 Kontributor
-Fattahul Halim Alwafaa - Developer Utama - alwafaa123
 
+Fattahul Halim Alwafaa - Developer Utama - alwafaa123
+Dzaqwa Alqawi Fahri - desaigner engineering - dzaqwa123
+Syahrul Ramadhan Henry - Game Develoment - kliperzcu
+Bobby Satrio Prabowo - Cyber Security - denbobby
 
 ----
 ## 📂 Struktur Proyek
