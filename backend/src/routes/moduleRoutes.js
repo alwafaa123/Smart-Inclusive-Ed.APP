@@ -3,15 +3,22 @@ const router = express.Router();
 
 const moduleController = require("../controllers/moduleController");
 const { requireRole, requireAuth } = require("../middleware/db");
+const { uploadAttachment } = require("../middleware/attachmentUpload");
 
 // Guru membuat dan mengelola materi.
 router.post(
   "/classes/:classId/modules",
   requireRole("teacher"),
+  uploadAttachment,
   moduleController.createModule,
 );
 
-router.put("/:id", requireRole("teacher"), moduleController.updateModule);
+router.put("/:id", requireRole("teacher"), uploadAttachment, moduleController.updateModule);
+router.get(
+  "/:id/attachment",
+  requireRole("teacher", "student"),
+  moduleController.downloadModuleAttachment,
+);
 
 router.patch(
   "/:id/publish",

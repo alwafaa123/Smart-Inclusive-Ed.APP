@@ -1,4 +1,10 @@
 const db = require("../config/db");
+const {
+  attachmentData,
+  discardUploadedFile,
+  removeStoredFile,
+  sendStoredFile,
+} = require("../middleware/attachmentUpload");
 
 // Membuat tugas baru untuk kelas milik guru
 exports.createAssignment = async (req, res) => {
@@ -8,6 +14,7 @@ exports.createAssignment = async (req, res) => {
     const teacherId = req.user.id; // ← pakai req.user (dari middleware db.js)
 
     if (!title || !instructions) {
+      discardUploadedFile(req);
       return res.status(400).json({
         message: "Judul dan instruksi tugas wajib diisi.",
       });
@@ -19,16 +26,27 @@ exports.createAssignment = async (req, res) => {
     );
 
     if (classes.length === 0) {
+      discardUploadedFile(req);
       return res.status(403).json({
         message: "Kelas tidak ditemukan atau bukan milik Anda.",
       });
     }
 
+    const attachment = attachmentData(req.file);
     const [result] = await db.execute(
       `INSERT INTO assignments
-       (class_id, title, instructions, due_at)
-       VALUES (?, ?, ?, ?)`,
-      [classId, title.trim(), instructions.trim(), due_at || null],
+       (class_id, title, instructions, due_at,
+        attachment_path, attachment_name, attachment_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        classId,
+        title.trim(),
+        instructions.trim(),
+        due_at || null,
+        attachment?.attachment_path || null,
+        attachment?.attachment_name || null,
+        attachment?.attachment_type || null,
+      ],
     );
 
     // Buat notifikasi ke setiap siswa di kelas ini
@@ -63,9 +81,11 @@ exports.createAssignment = async (req, res) => {
         title: title.trim(),
         instructions: instructions.trim(),
         due_at: due_at || null,
+        ...attachment,
       },
     });
   } catch (error) {
+    discardUploadedFile(req);
     console.error("Create assignment error:", error);
     return res.status(500).json({
       message: "Terjadi kesalahan saat membuat tugas.",
@@ -110,6 +130,8 @@ exports.getClassAssignments = async (req, res) => {
          a.title,
          a.instructions,
          a.due_at,
+         a.attachment_name,
+         a.attachment_type,
          a.created_at,
          a.updated_at
        FROM assignments a
@@ -136,29 +158,57 @@ exports.updateAssignment = async (req, res) => {
     const teacherId = req.user.id; // ← pakai req.user
 
     if (!title || !instructions) {
+      discardUploadedFile(req);
       return res.status(400).json({
         message: "Judul dan instruksi tugas wajib diisi.",
       });
     }
 
-    const [result] = await db.execute(
-      `UPDATE assignments a
+    const [existing] = await db.execute(
+      `SELECT a.attachment_path
+       FROM assignments a
        JOIN classes c ON c.id = a.class_id
-       SET a.title = ?,
-           a.instructions = ?,
-           a.due_at = ?
        WHERE a.id = ? AND c.teacher_id = ?`,
-      [title.trim(), instructions.trim(), due_at || null, id, teacherId],
+      [id, teacherId],
     );
 
-    if (result.affectedRows === 0) {
+    if (existing.length === 0) {
+      discardUploadedFile(req);
       return res.status(404).json({
         message: "Tugas tidak ditemukan atau tidak dapat diubah.",
       });
     }
 
+    const attachment = attachmentData(req.file);
+    await db.execute(
+      `UPDATE assignments a
+       JOIN classes c ON c.id = a.class_id
+       SET a.title = ?,
+           a.instructions = ?,
+           a.due_at = ?,
+           a.attachment_path = COALESCE(?, a.attachment_path),
+           a.attachment_name = COALESCE(?, a.attachment_name),
+           a.attachment_type = COALESCE(?, a.attachment_type)
+       WHERE a.id = ? AND c.teacher_id = ?`,
+      [
+        title.trim(),
+        instructions.trim(),
+        due_at || null,
+        attachment?.attachment_path || null,
+        attachment?.attachment_name || null,
+        attachment?.attachment_type || null,
+        id,
+        teacherId,
+      ],
+    );
+
+    if (attachment && existing[0].attachment_path) {
+      removeStoredFile(existing[0].attachment_path);
+    }
+
     return res.json({ message: "Tugas berhasil diperbarui." });
   } catch (error) {
+    discardUploadedFile(req);
     console.error("Update assignment error:", error);
     return res.status(500).json({
       message: "Gagal memperbarui tugas.",
@@ -172,18 +222,36 @@ exports.deleteAssignment = async (req, res) => {
     const { id } = req.params;
     const teacherId = req.user.id; // ← pakai req.user
 
-    const [result] = await db.execute(
+    const [existing] = await db.execute(
+      `SELECT a.attachment_path
+       FROM assignments a
+       JOIN classes c ON c.id = a.class_id
+       WHERE a.id = ? AND c.teacher_id = ?`,
+      [id, teacherId],
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({
+        message: "Tugas tidak ditemukan atau tidak dapat dihapus.",
+      });
+    }
+
+    const [submissionAttachments] = await db.execute(
+      "SELECT attachment_path FROM submissions WHERE assignment_id = ?",
+      [id],
+    );
+
+    await db.execute(
       `DELETE a FROM assignments a
        JOIN classes c ON c.id = a.class_id
        WHERE a.id = ? AND c.teacher_id = ?`,
       [id, teacherId],
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        message: "Tugas tidak ditemukan atau tidak dapat dihapus.",
-      });
-    }
+    if (existing[0].attachment_path) removeStoredFile(existing[0].attachment_path);
+    submissionAttachments.forEach((row) => {
+      if (row.attachment_path) removeStoredFile(row.attachment_path);
+    });
 
     return res.json({ message: "Tugas berhasil dihapus." });
   } catch (error) {
@@ -194,6 +262,47 @@ exports.deleteAssignment = async (req, res) => {
   }
 };
 
+exports.downloadAssignmentAttachment = async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT a.class_id, a.attachment_path, a.attachment_name, c.teacher_id
+       FROM assignments a
+       JOIN classes c ON c.id = a.class_id
+       WHERE a.id = ?`,
+      [req.params.id],
+    );
+    const assignment = rows[0];
+
+    if (!assignment?.attachment_path) {
+      return res.status(404).json({ message: "Lampiran tugas tidak ditemukan." });
+    }
+
+    let hasAccess = req.user.role === "teacher"
+      && Number(assignment.teacher_id) === Number(req.user.id);
+    if (req.user.role === "student") {
+      const [members] = await db.execute(
+        "SELECT class_id FROM class_members WHERE class_id = ? AND student_id = ?",
+        [assignment.class_id, req.user.id],
+      );
+      hasAccess = members.length > 0;
+    }
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Anda tidak memiliki akses ke lampiran ini." });
+    }
+
+    return sendStoredFile(
+      res,
+      assignment.attachment_path,
+      assignment.attachment_name,
+      "Lampiran tugas tidak ditemukan.",
+    );
+  } catch (error) {
+    console.error("Download assignment attachment error:", error);
+    return res.status(500).json({ message: "Gagal mengunduh lampiran tugas." });
+  }
+};
+
 // Siswa mengumpulkan atau memperbarui jawaban
 exports.submitAssignment = async (req, res) => {
   try {
@@ -201,9 +310,10 @@ exports.submitAssignment = async (req, res) => {
     const studentId = req.user.id; // ← pakai req.user
     const { answer } = req.body;
 
-    if (!answer || !answer.trim()) {
+    if (!answer?.trim() && !req.file) {
+      discardUploadedFile(req);
       return res.status(400).json({
-        message: "Jawaban tugas tidak boleh kosong.",
+        message: "Tuliskan jawaban atau lampirkan berkas tugas.",
       });
     }
 
@@ -216,6 +326,7 @@ exports.submitAssignment = async (req, res) => {
     );
 
     if (assignments.length === 0) {
+      discardUploadedFile(req);
       return res.status(403).json({
         message: "Tugas tidak ditemukan atau Anda bukan anggota kelas.",
       });
@@ -227,34 +338,64 @@ exports.submitAssignment = async (req, res) => {
       assignment.due_at &&
       new Date(assignment.due_at).getTime() < Date.now()
     ) {
+      discardUploadedFile(req);
       return res.status(400).json({
         message: "Tenggat waktu tugas telah berakhir.",
       });
     }
 
     const [existing] = await db.execute(
-      "SELECT id FROM submissions WHERE assignment_id = ? AND student_id = ?",
+      "SELECT id, attachment_path FROM submissions WHERE assignment_id = ? AND student_id = ?",
       [id, studentId],
     );
+    const attachment = attachmentData(req.file);
+
+    if (!answer?.trim() && !attachment && !existing[0]?.attachment_path) {
+      return res.status(400).json({
+        message: "Tuliskan jawaban atau lampirkan berkas tugas.",
+      });
+    }
 
     if (existing.length > 0) {
       await db.execute(
         `UPDATE submissions
-         SET answer = ?, submitted_at = CURRENT_TIMESTAMP
+         SET answer = ?,
+             attachment_path = COALESCE(?, attachment_path),
+             attachment_name = COALESCE(?, attachment_name),
+             attachment_type = COALESCE(?, attachment_type),
+             submitted_at = CURRENT_TIMESTAMP
          WHERE id = ?`,
-        [answer.trim(), existing[0].id],
+        [
+          answer?.trim() || "",
+          attachment?.attachment_path || null,
+          attachment?.attachment_name || null,
+          attachment?.attachment_type || null,
+          existing[0].id,
+        ],
       );
+      if (attachment && existing[0].attachment_path) {
+        removeStoredFile(existing[0].attachment_path);
+      }
     } else {
       await db.execute(
         `INSERT INTO submissions
-         (assignment_id, student_id, answer, submitted_at)
-         VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
-        [id, studentId, answer.trim()],
+         (assignment_id, student_id, answer, submitted_at,
+          attachment_path, attachment_name, attachment_type)
+         VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)`,
+        [
+          id,
+          studentId,
+          answer?.trim() || "",
+          attachment?.attachment_path || null,
+          attachment?.attachment_name || null,
+          attachment?.attachment_type || null,
+        ],
       );
     }
 
     return res.json({ message: "Jawaban berhasil dikumpulkan." });
   } catch (error) {
+    discardUploadedFile(req);
     console.error("Submit assignment error:", error);
     return res.status(500).json({
       message: "Gagal mengumpulkan jawaban.",
@@ -273,6 +414,8 @@ exports.getMySubmission = async (req, res) => {
          s.id,
          s.assignment_id,
          s.answer,
+         s.attachment_name,
+         s.attachment_type,
          s.score,
          s.feedback,
          s.submitted_at,
@@ -322,6 +465,8 @@ exports.getAssignmentSubmissions = async (req, res) => {
          u.name  AS student_name,
          u.email AS student_email,
          s.answer,
+         s.attachment_name,
+         s.attachment_type,
          s.score,
          s.feedback,
          s.submitted_at,
@@ -339,6 +484,46 @@ exports.getAssignmentSubmissions = async (req, res) => {
     return res.status(500).json({
       message: "Gagal mengambil daftar pengumpulan.",
     });
+  }
+};
+
+exports.downloadSubmissionAttachment = async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT s.student_id, s.attachment_path, s.attachment_name,
+              a.class_id, c.teacher_id, cm.student_id AS member_student_id
+       FROM submissions s
+       JOIN assignments a ON a.id = s.assignment_id
+       JOIN classes c ON c.id = a.class_id
+       LEFT JOIN class_members cm
+         ON cm.class_id = a.class_id AND cm.student_id = s.student_id
+       WHERE s.id = ?`,
+      [req.params.submissionId],
+    );
+    const submission = rows[0];
+
+    if (!submission?.attachment_path) {
+      return res.status(404).json({ message: "Lampiran jawaban tidak ditemukan." });
+    }
+
+    const hasAccess = req.user.role === "teacher"
+      ? Number(submission.teacher_id) === Number(req.user.id)
+      : Number(submission.student_id) === Number(req.user.id)
+        && Number(submission.member_student_id) === Number(req.user.id);
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Anda tidak memiliki akses ke lampiran ini." });
+    }
+
+    return sendStoredFile(
+      res,
+      submission.attachment_path,
+      submission.attachment_name,
+      "Lampiran jawaban tidak ditemukan.",
+    );
+  } catch (error) {
+    console.error("Download submission attachment error:", error);
+    return res.status(500).json({ message: "Gagal mengunduh lampiran jawaban." });
   }
 };
 

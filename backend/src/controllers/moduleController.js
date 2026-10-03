@@ -1,4 +1,10 @@
 const pool = require("../config/db");
+const {
+  attachmentData,
+  discardUploadedFile,
+  removeStoredFile,
+  sendStoredFile,
+} = require("../middleware/attachmentUpload");
 
 // Memeriksa apakah guru memiliki kelas tersebut.
 async function isClassOwner(classId, teacherId) {
@@ -22,6 +28,7 @@ exports.createModule = async (req, res) => {
     } = req.body;
 
     if (!title?.trim() || !content?.trim()) {
+      discardUploadedFile(req);
       return res.status(400).json({
         message: "Judul dan isi materi wajib diisi.",
       });
@@ -30,6 +37,7 @@ exports.createModule = async (req, res) => {
     const allowedTypes = ["text", "video", "audio", "mixed"];
 
     if (!allowedTypes.includes(content_type)) {
+      discardUploadedFile(req);
       return res.status(400).json({
         message: "Jenis materi tidak valid.",
       });
@@ -38,16 +46,28 @@ exports.createModule = async (req, res) => {
     const owned = await isClassOwner(classId, req.user.id);
 
     if (!owned) {
+      discardUploadedFile(req);
       return res.status(404).json({
         message: "Kelas tidak ditemukan atau bukan milik Anda.",
       });
     }
 
+    const attachment = attachmentData(req.file);
     const [result] = await pool.execute(
       `INSERT INTO modules
-       (class_id, title, description, content, content_type, is_published)
-       VALUES (?, ?, ?, ?, ?, 0)`,
-      [classId, title.trim(), description.trim(), content.trim(), content_type],
+       (class_id, title, description, content, content_type, is_published,
+        attachment_path, attachment_name, attachment_type)
+       VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+      [
+        classId,
+        title.trim(),
+        description.trim(),
+        content.trim(),
+        content_type,
+        attachment?.attachment_path || null,
+        attachment?.attachment_name || null,
+        attachment?.attachment_type || null,
+      ],
     );
 
     return res.status(201).json({
@@ -60,9 +80,11 @@ exports.createModule = async (req, res) => {
         content,
         content_type,
         is_published: 0,
+        ...attachment,
       },
     });
   } catch (error) {
+    discardUploadedFile(req);
     console.error("Create module error:", error);
     return res.status(500).json({
       message: "Gagal membuat materi.",
@@ -82,6 +104,7 @@ exports.getClassModules = async (req, res) => {
       query = `
         SELECT m.id, m.class_id, m.title, m.description,
                m.content, m.content_type, m.is_published,
+               m.attachment_name, m.attachment_type,
                m.created_at, m.updated_at
         FROM modules m
         JOIN classes c ON c.id = m.class_id
@@ -93,6 +116,7 @@ exports.getClassModules = async (req, res) => {
       query = `
         SELECT m.id, m.class_id, m.title, m.description,
                m.content, m.content_type, m.is_published,
+               m.attachment_name, m.attachment_type,
                m.created_at, m.updated_at
         FROM modules m
         JOIN class_members cm ON cm.class_id = m.class_id
@@ -122,6 +146,7 @@ exports.getModuleById = async (req, res) => {
     const [rows] = await pool.execute(
       `SELECT m.id, m.class_id, m.title, m.description,
               m.content, m.content_type, m.is_published,
+              m.attachment_path, m.attachment_name, m.attachment_type,
               m.created_at, m.updated_at
        FROM modules m
        WHERE m.id = ?`,
@@ -168,6 +193,46 @@ exports.getModuleById = async (req, res) => {
   }
 };
 
+exports.downloadModuleAttachment = async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT m.class_id, m.is_published, m.attachment_path, m.attachment_name
+       FROM modules m WHERE m.id = ?`,
+      [req.params.id],
+    );
+    const module = rows[0];
+
+    if (!module?.attachment_path) {
+      return res.status(404).json({ message: "Lampiran materi tidak ditemukan." });
+    }
+
+    let hasAccess = false;
+    if (req.user.role === "teacher") {
+      hasAccess = await isClassOwner(module.class_id, req.user.id);
+    } else if (req.user.role === "student" && Number(module.is_published) === 1) {
+      const [members] = await pool.execute(
+        "SELECT class_id FROM class_members WHERE class_id = ? AND student_id = ?",
+        [module.class_id, req.user.id],
+      );
+      hasAccess = members.length > 0;
+    }
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Anda tidak memiliki akses ke lampiran ini." });
+    }
+
+    return sendStoredFile(
+      res,
+      module.attachment_path,
+      module.attachment_name,
+      "Lampiran materi tidak ditemukan.",
+    );
+  } catch (error) {
+    console.error("Download module attachment error:", error);
+    return res.status(500).json({ message: "Gagal mengunduh lampiran materi." });
+  }
+};
+
 // Guru mengedit materi miliknya.
 exports.updateModule = async (req, res) => {
   try {
@@ -175,6 +240,7 @@ exports.updateModule = async (req, res) => {
     const { title, description = "", content, content_type } = req.body;
 
     if (!title?.trim() || !content?.trim()) {
+      discardUploadedFile(req);
       return res.status(400).json({
         message: "Judul dan isi materi wajib diisi.",
       });
@@ -183,35 +249,57 @@ exports.updateModule = async (req, res) => {
     const allowedTypes = ["text", "video", "audio", "mixed"];
 
     if (!allowedTypes.includes(content_type)) {
+      discardUploadedFile(req);
       return res.status(400).json({
         message: "Jenis materi tidak valid.",
       });
     }
 
-    const [result] = await pool.execute(
+    const [existing] = await pool.execute(
+      `SELECT m.attachment_path
+       FROM modules m
+       JOIN classes c ON c.id = m.class_id
+       WHERE m.id = ? AND c.teacher_id = ?`,
+      [id, req.user.id],
+    );
+
+    if (existing.length === 0) {
+      discardUploadedFile(req);
+      return res.status(404).json({
+        message: "Materi tidak ditemukan atau bukan milik Anda.",
+      });
+    }
+
+    const attachment = attachmentData(req.file);
+    await pool.execute(
       `UPDATE modules m
        JOIN classes c ON c.id = m.class_id
        SET m.title = ?, m.description = ?, m.content = ?,
-           m.content_type = ?
+           m.content_type = ?,
+           m.attachment_path = COALESCE(?, m.attachment_path),
+           m.attachment_name = COALESCE(?, m.attachment_name),
+           m.attachment_type = COALESCE(?, m.attachment_type)
        WHERE m.id = ? AND c.teacher_id = ?`,
       [
         title.trim(),
         description.trim(),
         content.trim(),
         content_type,
+        attachment?.attachment_path || null,
+        attachment?.attachment_name || null,
+        attachment?.attachment_type || null,
         id,
         req.user.id,
       ],
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        message: "Materi tidak ditemukan atau bukan milik Anda.",
-      });
+    if (attachment && existing[0].attachment_path) {
+      removeStoredFile(existing[0].attachment_path);
     }
 
     return res.json({ message: "Materi berhasil diperbarui." });
   } catch (error) {
+    discardUploadedFile(req);
     console.error("Update module error:", error);
     return res.status(500).json({
       message: "Gagal memperbarui materi.",
@@ -265,18 +353,28 @@ exports.deleteModule = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await pool.execute(
+    const [existing] = await pool.execute(
+      `SELECT m.attachment_path
+       FROM modules m
+       JOIN classes c ON c.id = m.class_id
+       WHERE m.id = ? AND c.teacher_id = ?`,
+      [id, req.user.id],
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({
+        message: "Materi tidak ditemukan atau bukan milik Anda.",
+      });
+    }
+
+    await pool.execute(
       `DELETE m FROM modules m
        JOIN classes c ON c.id = m.class_id
        WHERE m.id = ? AND c.teacher_id = ?`,
       [id, req.user.id],
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        message: "Materi tidak ditemukan atau bukan milik Anda.",
-      });
-    }
+    if (existing[0].attachment_path) removeStoredFile(existing[0].attachment_path);
 
     return res.json({ message: "Materi berhasil dihapus." });
   } catch (error) {
