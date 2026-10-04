@@ -339,7 +339,7 @@ Jika seluruh tabel sudah tersedia, database telah berhasil dibuat.
 
 ### 👥 Menyiapkan Akun Demo untuk dicoba
 
-Agar juri dapat mencoba seluruh fitur aplikasi, sediakan akun demo dengan peran berbeda:
+Agar dapat mencoba seluruh fitur aplikasi, sediakan akun terlebih dahulu dengan peran berbeda, kecuali admin sudah dibuatkan dengan menggunakan [ admin@smartinclusive.test ] dengan password [ PasswordUji123! ] dan ada juga kriterianya seperti berikut:
 
 | Peran | Email demo                                  | Kegunaan                               |
 | ----- | ------------------------------------------- | -------------------------------------- |
