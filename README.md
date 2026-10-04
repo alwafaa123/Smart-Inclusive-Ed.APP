@@ -347,12 +347,6 @@ Agar dapat mencoba seluruh fitur aplikasi, sediakan akun terlebih dahulu dengan 
 | Guru  | [guru@demo.local](mailto:guru@demo.local)   | Membuat kelas, materi, dan tugas       |
 | Siswa | [siswa@demo.local](mailto:siswa@demo.local) | Mengakses materi dan mengerjakan tugas |
 
-Akun tersebut harus dibuat melalui proses seed yang menggunakan hashing kata sandi sesuai mekanisme autentikasi backend.
-
-**Jangan memasukkan kata sandi teks biasa langsung ke kolom `password_hash`.** Gunakan script seed Node.js dengan `bcryptjs` agar kata sandi demo di-hash terlebih dahulu.
-
-Jangan gunakan akun demo untuk menyimpan data pribadi atau data siswa sungguhan.
-
 ---
 
 ### ✅ Checklist Sebelum Aplikasi Dicoba :
