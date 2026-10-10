@@ -16,11 +16,33 @@ const teacherNotificationRoutes = require("./routes/teacherNotificationRoutes");
 const { startDeadlineReminderJob } = require("./jobs/deadlineReminderJob");
 
 const app = express();
+const frontendOrigin =
+  process.env.FRONTEND_URL || "http://localhost:3000";
+
+function isLocalDevelopmentOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    return (
+      url.protocol === "http:" &&
+      ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
 
 // ─── Middleware global ───────────────────────────────────────────────────────
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin(origin, callback) {
+      const isAllowed =
+        !origin ||
+        origin === frontendOrigin ||
+        (process.env.NODE_ENV !== "production" &&
+          isLocalDevelopmentOrigin(origin));
+
+      callback(null, isAllowed);
+    },
     credentials: true,
   })
 );

@@ -87,7 +87,7 @@ function StudentNotificationsContent() {
   const read   = notifications.filter((n) =>  n.is_read);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 px-4 py-8 sm:px-8">
+    <main className="workspace-page min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 px-4 py-8 sm:px-8">
       <div className="mx-auto max-w-4xl space-y-6">
 
         {/* ── Header ──────────────────────────────────────────────────── */}

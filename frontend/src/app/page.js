@@ -71,7 +71,7 @@ export default function Home() {
     async function checkBackend() {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/health`,
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5200/api"}/health`,
         );
         if (!res.ok) throw new Error("Server memberikan respons error.");
         const data = await res.json();
@@ -86,9 +86,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+    <div className="landing-page min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
       {/* ── Navbar ─────────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
+      <nav className="landing-nav sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-8">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-lg text-white shadow-sm">

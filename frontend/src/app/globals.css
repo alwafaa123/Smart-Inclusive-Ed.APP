@@ -33,6 +33,129 @@ html {
 body {
   background-color: #f8fafc;
   color: #0f172a;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a[href] {
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+a[href]:not([class]) {
+  color: #1d4ed8;
+  text-underline-offset: 0.18em;
+}
+
+.landing-page {
+  background:
+    radial-gradient(ellipse at 12% 6%, rgb(191 219 254 / 38%), transparent 36rem),
+    linear-gradient(145deg, #f8fbff 0%, #fff 48%, #f3f6ff 100%);
+}
+
+.landing-nav {
+  box-shadow: 0 1px 16px rgb(15 23 42 / 5%);
+}
+
+.auth-page {
+  background:
+    radial-gradient(ellipse at 90% 12%, rgb(191 219 254 / 60%), transparent 34rem),
+    linear-gradient(145deg, #eff6ff, #f8fafc 55%, #eef2ff);
+}
+
+.auth-main {
+  background: transparent;
+}
+
+.auth-card {
+  border-color: rgb(203 213 225 / 75%);
+  border-radius: 1.75rem;
+  box-shadow:
+    0 24px 70px rgb(30 64 175 / 9%),
+    0 3px 10px rgb(15 23 42 / 4%);
+  animation: fade-in 0.35s ease-out both;
+}
+
+.auth-visual {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.auth-visual::before,
+.auth-visual::after {
+  position: absolute;
+  z-index: -1;
+  width: 24rem;
+  height: 24rem;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.auth-visual::before {
+  right: -10rem;
+  top: -8rem;
+  box-shadow:
+    0 0 0 2rem rgb(255 255 255 / 4%),
+    0 0 0 4rem rgb(255 255 255 / 3%);
+}
+
+.auth-visual::after {
+  bottom: -18rem;
+  left: -10rem;
+  width: 30rem;
+  height: 30rem;
+  background: rgb(255 255 255 / 5%);
+}
+
+.dashboard-page,
+.workspace-page {
+  background:
+    radial-gradient(ellipse at 94% 0%, rgb(191 219 254 / 38%), transparent 34rem),
+    linear-gradient(145deg, #f8fafc 0%, #f4f7fc 55%, #eef4ff 100%);
+}
+
+.workspace-page > div {
+  position: relative;
+}
+
+.workspace-page header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgb(203 213 225 / 70%);
+}
+
+.workspace-page :is(section, article, [role="dialog"]) {
+  border-radius: 1.25rem;
+}
+
+.workspace-page :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+  border-radius: 0.875rem;
+}
+
+.dashboard-page .card-interactive,
+.workspace-page .card-interactive {
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dashboard-page .card-interactive:hover,
+.workspace-page .card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgb(30 64 175 / 9%);
 }
 
 /* Soft color accents along dashboard lower corners */
@@ -87,35 +210,74 @@ body {
 
 /* ── Accessibility: high-contrast mode ───────────────────────────────────── */
 .accessibility-high-contrast,
-.accessibility-high-contrast main,
-.accessibility-high-contrast section,
-.accessibility-high-contrast article,
-.accessibility-high-contrast header,
-.accessibility-high-contrast nav {
+.accessibility-high-contrast :where(*) {
+  color: #fff !important;
   background-color: #000 !important;
-  color: #fde68a !important;
+  background-image: none !important;
+  border-color: #fde68a !important;
+  box-shadow: none !important;
 }
 
 .accessibility-high-contrast a {
-  color: #93c5fd !important;
-  text-decoration: underline;
+  color: #67e8f9 !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
 }
 
-.accessibility-high-contrast button {
-  border: 2px solid currentColor !important;
+.accessibility-high-contrast button,
+.accessibility-high-contrast [role="button"] {
+  color: #000 !important;
+  background-color: #fde68a !important;
+  border: 2px solid #fde68a !important;
 }
 
-.accessibility-high-contrast .dashboard-page::before,
-.accessibility-high-contrast .dashboard-page::after {
-  display: none;
+.accessibility-high-contrast button:disabled,
+.accessibility-high-contrast [aria-disabled="true"] {
+  color: #fff !important;
+  background-color: #27272a !important;
+  border-color: #fff !important;
 }
 
-.accessibility-high-contrast input,
+.accessibility-high-contrast input:not([type="checkbox"]):not([type="radio"]),
 .accessibility-high-contrast textarea,
 .accessibility-high-contrast select {
   color: #000 !important;
   background-color: #fff !important;
   border: 2px solid #fde68a !important;
+}
+
+.accessibility-high-contrast input[type="range"] {
+  accent-color: #fde68a !important;
+}
+
+.accessibility-high-contrast label:has(input[type="checkbox"]:checked)
+  > div:first-child
+  > div {
+  background-color: #fde68a !important;
+}
+
+.accessibility-high-contrast label:has(input[type="checkbox"]:checked)
+  > div:first-child
+  > div
+  > div {
+  background-color: #000 !important;
+  border: 2px solid #fde68a !important;
+}
+
+.accessibility-high-contrast :focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 3px;
+}
+
+.accessibility-high-contrast ::selection {
+  color: #000 !important;
+  background-color: #fde68a !important;
+}
+
+.accessibility-high-contrast .dashboard-page::before,
+.accessibility-high-contrast .dashboard-page::after {
+  display: none;
 }
 
 /* ── Focus ring (keyboard navigation) ───────────────────────────────────── */

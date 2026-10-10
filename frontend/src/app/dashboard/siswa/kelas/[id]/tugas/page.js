@@ -164,7 +164,7 @@ function StudentAssignmentsContent() {
   ═══════════════════════════════════════════════════════════════════════ */
   return (
     <main
-      className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 px-4 py-8 sm:px-8"
+      className="workspace-page min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 px-4 py-8 sm:px-8"
       style={{
         fontSize:   `${preferences.font_size}px`,
         lineHeight: preferences.line_spacing,

@@ -55,11 +55,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="auth-page flex min-h-screen">
       {/* ── Panel kiri (ilustrasi) — sembunyikan di layar kecil ────────────── */}
       <div
         aria-hidden="true"
-        className="hidden flex-col items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-12 lg:flex lg:w-1/2"
+        className="auth-visual hidden flex-col items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-12 lg:flex lg:w-1/2"
       >
         <div className="max-w-sm text-white">
           <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 text-3xl backdrop-blur-sm">
@@ -90,7 +90,7 @@ export default function LoginPage() {
       </div>
 
       {/* ── Panel kanan (form login) ────────────────────────────────────────── */}
-      <main className="flex flex-1 flex-col items-center justify-center bg-slate-50 px-4 py-12 sm:px-8">
+      <main className="auth-main flex flex-1 flex-col items-center justify-center bg-slate-50 px-4 py-12 sm:px-8">
         <div className="w-full max-w-md">
           {/* Logo mobile */}
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
@@ -100,7 +100,7 @@ export default function LoginPage() {
             <span className="font-bold text-slate-900">Smart Inclusive Ed</span>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
+          <div className="auth-card rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
             <h2 className="text-2xl font-extrabold text-slate-900">
               Selamat datang kembali
             </h2>

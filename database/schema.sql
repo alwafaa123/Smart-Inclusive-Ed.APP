@@ -240,19 +240,8 @@ CREATE TABLE `accessibility_preferences` (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ══════════════════════════════════════════════════════════════════════════════
---  DATA AWAL — Akun Admin
---  Password: Admin123! (bcrypt hash rounds=12)
---  GANTI HASH INI setelah menjalankan: node createTestUser.js
--- ══════════════════════════════════════════════════════════════════════════════
-INSERT INTO `users` (`name`, `email`, `password_hash`, `role`, `is_active`)
-VALUES (
-  'Administrator',
-  'admin@smartinclusive.test',
-  '$2a$12$placeholder_run_createTestUser_to_generate_real_hash',
-  'admin',
-  1
-);
+-- Buat akun admin lokal setelah impor dengan menjalankan
+-- `node createTestUser.js` dari folder backend.
 
 -- ══════════════════════════════════════════════════════════════════════════════
 --  SELESAI

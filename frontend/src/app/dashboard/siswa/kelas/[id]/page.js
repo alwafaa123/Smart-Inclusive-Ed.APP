@@ -86,7 +86,7 @@ function ClassOverviewContent() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 sm:p-8">
+    <main className="workspace-page min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 sm:p-8">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
