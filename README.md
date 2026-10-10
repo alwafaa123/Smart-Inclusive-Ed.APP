@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧠✨ Smart-Inclusive-Ed.APP
+# ✨ Smart-Inclusive-Ed.APP
 ### Platform Aplikasi Web Pendidikan Inklusif Berbasis Teknologi Modern
 
 [![GitHub Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge&logo=github)](https://github.com/alwafaa123/Smart-Inclusive-Ed.APP)
