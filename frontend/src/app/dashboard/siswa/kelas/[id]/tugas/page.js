@@ -51,7 +51,11 @@ function StudentAssignmentsContent() {
   const params  = useParams();
   const classId = params.id;
 
-  const { preferences } = useAccessibility();
+  const {
+    preferences,
+    updatePreferences,
+    error: accessibilityError,
+  } = useAccessibility();
 
   const [assignments,   setAssignments]   = useState([]);
   const [submissions,   setSubmissions]   = useState({});
@@ -62,6 +66,42 @@ function StudentAssignmentsContent() {
   const [loading,       setLoading]       = useState(true);
   const [submittingId,  setSubmittingId]  = useState(null);
   const [message,       setMessage]       = useState({ text: "", type: "success" });
+
+  useEffect(() => () => {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  }, []);
+
+  function updatePreference(key, value) {
+    updatePreferences({ [key]: value });
+  }
+
+  function speakInstructions(assignment) {
+    if (!preferences.text_to_speech) {
+      setMessage({
+        text: "Aktifkan pembaca teks pada pengaturan aksesibilitas terlebih dahulu.",
+        type: "error",
+      });
+      return;
+    }
+    if (!("speechSynthesis" in window)) {
+      setMessage({
+        text: "Fitur pembaca teks tidak tersedia di browser ini.",
+        type: "error",
+      });
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(
+      `${assignment.title}. ${assignment.instructions || ""}`,
+    );
+    utterance.lang = "id-ID";
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function stopSpeaking() {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  }
 
   /* ── Muat tugas + semua submission milik siswa ─────────────────────── */
   const loadData = useCallback(async () => {
@@ -197,6 +237,88 @@ function StudentAssignmentsContent() {
           </div>
         </header>
 
+        {/* ── Pengaturan aksesibilitas ──────────────────────────────────── */}
+        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-4 font-bold text-slate-900">
+            Pengaturan Aksesibilitas
+          </h2>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-700">Ukuran teks</span>
+              <button
+                type="button"
+                onClick={() =>
+                  updatePreference(
+                    "font_size",
+                    Math.max(14, preferences.font_size - 2),
+                  )
+                }
+                aria-label="Perkecil teks"
+                className="rounded-lg border border-slate-300 px-3 py-1 font-bold text-slate-800 hover:bg-slate-100"
+              >
+                A−
+              </button>
+              <span aria-live="polite" className="min-w-12 text-center text-sm">
+                {preferences.font_size}px
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  updatePreference(
+                    "font_size",
+                    Math.min(32, preferences.font_size + 2),
+                  )
+                }
+                aria-label="Perbesar teks"
+                className="rounded-lg border border-slate-300 px-3 py-1 font-bold text-slate-800 hover:bg-slate-100"
+              >
+                A+
+              </button>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              Jarak baris
+              <select
+                value={preferences.line_spacing}
+                onChange={(event) =>
+                  updatePreference("line_spacing", Number(event.target.value))
+                }
+                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-slate-900"
+              >
+                <option value={1.5}>Normal</option>
+                <option value={1.8}>Lebih renggang</option>
+                <option value={2.2}>Sangat renggang</option>
+              </select>
+            </label>
+
+            {[
+              { key: "high_contrast", label: "Kontras tinggi" },
+              { key: "dyslexia_friendly_font", label: "Font disleksia" },
+              { key: "text_to_speech", label: "Pembaca teks (TTS)" },
+            ].map(({ key, label }) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 text-sm font-medium text-slate-700"
+              >
+                <input
+                  type="checkbox"
+                  checked={Boolean(preferences[key])}
+                  onChange={(event) =>
+                    updatePreference(key, event.target.checked)
+                  }
+                  className="h-4 w-4 accent-blue-600"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+          {accessibilityError && (
+            <p role="alert" className="mt-3 text-sm font-medium text-red-700">
+              Gagal menyimpan pengaturan aksesibilitas: {accessibilityError}
+            </p>
+          )}
+        </section>
+
         {/* ── Statistik ringkas ─────────────────────────────────────────── */}
         {!loading && assignments.length > 0 && (
           <div className="mb-6 grid grid-cols-3 gap-3">
@@ -300,9 +422,33 @@ function StudentAssignmentsContent() {
 
                       {/* Soal / instruksi */}
                       <div className="rounded-2xl bg-blue-50/60 border border-blue-100 p-5 mb-5">
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-blue-600">
-                          📋 Soal / Instruksi Guru
-                        </p>
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
+                            📋 Soal / Instruksi Guru
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => speakInstructions(assignment)}
+                              aria-label={`Bacakan instruksi: ${assignment.title}`}
+                              title={
+                                preferences.text_to_speech
+                                  ? "Bacakan instruksi tugas"
+                                  : "Aktifkan TTS di pengaturan aksesibilitas"
+                              }
+                              className="rounded-lg border border-blue-300 px-3 py-1.5 text-sm font-medium text-blue-800 hover:bg-blue-100"
+                            >
+                              🔊 Bacakan soal
+                            </button>
+                            <button
+                              type="button"
+                              onClick={stopSpeaking}
+                              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                            >
+                              ⏹ Hentikan
+                            </button>
+                          </div>
+                        </div>
                         <div
                           className="whitespace-pre-wrap text-slate-800"
                           style={{ fontSize: `${preferences.font_size}px`, lineHeight: preferences.line_spacing }}
