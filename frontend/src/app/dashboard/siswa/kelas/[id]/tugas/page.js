@@ -63,12 +63,24 @@ function StudentAssignmentsContent() {
   const [submissionFiles, setSubmissionFiles] = useState({});
   const submissionFileInputs = useRef({});
   const [openId,        setOpenId]        = useState(null); // soal yang sedang dibuka
-  const [loading,       setLoading]       = useState(true);
+  const [loadedClassId, setLoadedClassId] = useState(null);
+  const [currentTime,   setCurrentTime]   = useState(null);
   const [submittingId,  setSubmittingId]  = useState(null);
   const [message,       setMessage]       = useState({ text: "", type: "success" });
 
   useEffect(() => () => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  }, []);
+
+  useEffect(() => {
+    const updateCurrentTime = () => setCurrentTime(Date.now());
+    const initialTimer = window.setTimeout(updateCurrentTime, 0);
+    const interval = window.setInterval(updateCurrentTime, 60_000);
+
+    return () => {
+      window.clearTimeout(initialTimer);
+      window.clearInterval(interval);
+    };
   }, []);
 
   function updatePreference(key, value) {
@@ -104,43 +116,67 @@ function StudentAssignmentsContent() {
   }
 
   /* ── Muat tugas + semua submission milik siswa ─────────────────────── */
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await apiRequest(`/assignments/classes/${classId}`);
-      // Backend mengembalikan { assignments: [...] }
-      const list = data.assignments || [];
-      setAssignments(list);
+  const fetchData = useCallback(async () => {
+    const data = await apiRequest(`/assignments/classes/${classId}`);
+    const list = data.assignments || [];
+    const results = await Promise.allSettled(
+      list.map((assignment) =>
+        apiRequest(`/assignments/${assignment.id}/my-submission`)
+          .then((submission) => [assignment.id, submission])
+          .catch(() => [assignment.id, null]),
+      ),
+    );
 
-      // Ambil submission masing-masing secara paralel
-      const results = await Promise.allSettled(
-        list.map((a) =>
-          apiRequest(`/assignments/${a.id}/my-submission`)
-            .then((sub) => [a.id, sub])
-            .catch(() => [a.id, null]),
-        ),
-      );
+    const subMap = {};
+    const ansMap = {};
+    results.forEach((result) => {
+      if (result.status === "fulfilled") {
+        const [id, submission] = result.value;
+        subMap[id] = submission;
+        ansMap[id] = submission?.answer || "";
+      }
+    });
 
-      const subMap = {};
-      const ansMap = {};
-      results.forEach((r) => {
-        if (r.status === "fulfilled") {
-          const [id, sub] = r.value;
-          subMap[id] = sub;
-          ansMap[id] = sub?.answer || "";
-        }
-      });
-
-      setSubmissions(subMap);
-      setAnswers(ansMap);
-    } catch (err) {
-      setMessage({ text: err.message || "Gagal memuat tugas.", type: "error" });
-    } finally {
-      setLoading(false);
-    }
+    return { list, subMap, ansMap };
   }, [classId]);
 
-  useEffect(() => { if (classId) loadData(); }, [classId, loadData]);
+  useEffect(() => {
+    if (!classId) return undefined;
+
+    let isActive = true;
+    async function loadInitialData() {
+      try {
+        const { list, subMap, ansMap } = await fetchData();
+        if (!isActive) return;
+        setAssignments(list);
+        setSubmissions(subMap);
+        setAnswers(ansMap);
+      } catch (err) {
+        if (isActive) {
+          setMessage({ text: err.message || "Gagal memuat tugas.", type: "error" });
+        }
+      } finally {
+        if (isActive) setLoadedClassId(classId);
+      }
+    }
+
+    loadInitialData();
+    return () => {
+      isActive = false;
+    };
+  }, [classId, fetchData]);
+
+  const loadData = useCallback(async () => {
+    try {
+      const { list, subMap, ansMap } = await fetchData();
+      setAssignments(list);
+      setSubmissions(subMap);
+      setAnswers(ansMap);
+      setLoadedClassId(classId);
+    } catch (err) {
+      setMessage({ text: err.message || "Gagal memuat tugas.", type: "error" });
+    }
+  }, [classId, fetchData]);
 
   /* ── Kumpulkan / perbarui jawaban ──────────────────────────────────── */
   async function handleSubmit(assignmentId) {
@@ -187,10 +223,11 @@ function StudentAssignmentsContent() {
   }
 
   function daysLeft(dateStr) {
-    if (!dateStr) return null;
-    return Math.ceil((new Date(dateStr) - Date.now()) / 86400000);
+    if (!dateStr || currentTime === null) return null;
+    return Math.ceil((new Date(dateStr).getTime() - currentTime) / 86400000);
   }
 
+  const loading = Boolean(classId) && loadedClassId !== classId;
   const msgColor = message.type === "error"
     ? "border-red-200 bg-red-50 text-red-800"
     : "border-emerald-200 bg-emerald-50 text-emerald-800";
@@ -204,7 +241,7 @@ function StudentAssignmentsContent() {
   ═══════════════════════════════════════════════════════════════════════ */
   return (
     <main
-      className="workspace-page min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 px-4 py-8 sm:px-8"
+      className="workspace-page min-h-screen bg-linear-to-br from-slate-50 to-blue-50/30 px-4 py-8 sm:px-8"
       style={{
         fontSize:   `${preferences.font_size}px`,
         lineHeight: preferences.line_spacing,
@@ -363,7 +400,8 @@ function StudentAssignmentsContent() {
             {assignments.map((assignment, index) => {
               const submission    = submissions[assignment.id];
               const dueDate       = assignment.due_at ? new Date(assignment.due_at) : null;
-              const deadlinePassed = dueDate && dueDate < new Date();
+              const deadlinePassed =
+                dueDate && currentTime !== null && dueDate.getTime() < currentTime;
               const days          = daysLeft(assignment.due_at);
               const urgent        = days !== null && days >= 0 && days <= 2;
               const isOpen        = openId === assignment.id;
