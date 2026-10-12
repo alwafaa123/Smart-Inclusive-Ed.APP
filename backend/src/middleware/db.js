@@ -32,7 +32,12 @@ async function loadActiveUser(req, res, next) {
     if (!user || Number(user.is_active) !== 1) {
       await destroySession(req);
 
-      res.clearCookie(process.env.SESSION_NAME || "smartinclusive.sid");
+      res.clearCookie(process.env.SESSION_NAME || "smartinclusive.sid", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+      });
 
       return res.status(401).json({
         message: "Sesi berakhir atau akun tidak aktif. Silakan login kembali.",

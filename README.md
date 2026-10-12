@@ -84,12 +84,14 @@ Frontend dan backend harus di-deploy sebagai dua layanan terpisah:
 1. **Railway (backend):** hubungkan repositori dan atur Root Directory ke
    `backend`. Perintah start adalah `npm start`. Tambahkan environment variables
    `NODE_ENV=production`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`,
-   `DB_NAME`, dan `SESSION_SECRET`. Gunakan database MySQL yang dapat diakses
+   `DB_NAME`, `SESSION_SECRET`, dan `SESSION_MAX_AGE=604800000`. Gunakan database MySQL yang dapat diakses
    dari Railway; skema database dan migrasi proyek harus sudah diterapkan.
    Buat `SESSION_SECRET` acak minimal 32 karakter dan jangan mengubahnya setiap
    deploy. Atur `FRONTEND_URL` ke origin Vercel lengkap, misalnya
    `https://nama-aplikasi.vercel.app` (tanpa garis miring di akhir). Biarkan
-   Railway menyediakan `PORT`.
+   Railway menyediakan `PORT`. Cookie sesi menggunakan `Secure` di production,
+   `SameSite=Lax`, dan masa berlaku 7 hari; setelan ini cocok karena browser
+   mengakses API lewat proxy pada domain frontend yang sama.
 2. **Vercel (frontend):** atur Root Directory ke `frontend`, framework ke
    Next.js, lalu tambahkan `BACKEND_API_URL` dengan URL API Railway yang berakhiran
    `/api`, misalnya `https://nama-layanan.up.railway.app/api`. Deploy ulang setelah
