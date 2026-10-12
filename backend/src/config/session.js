@@ -2,6 +2,17 @@ const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
 const { pool } = require("./database");
 
+const sessionSecret = process.env.SESSION_SECRET;
+if (
+  !sessionSecret ||
+  sessionSecret.length < 32 ||
+  sessionSecret.startsWith("ganti_dengan")
+) {
+  throw new Error(
+    "SESSION_SECRET must be set to a random value of at least 32 characters.",
+  );
+}
+
 const sessionStore = new MySQLStore(
   {
     clearExpired: true,
@@ -17,7 +28,7 @@ const sessionStore = new MySQLStore(
 
 const sessionMiddleware = session({
   name: process.env.SESSION_NAME || "smartinclusive.sid",
-  secret: process.env.SESSION_SECRET,
+  secret: sessionSecret,
   store: sessionStore,
   resave: false,
   saveUninitialized: false,

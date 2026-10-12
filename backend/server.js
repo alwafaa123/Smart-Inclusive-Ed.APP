@@ -1,7 +1,4 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const app = express();
 const app = require("./src/app");
 const { testConnection, pool } = require("./src/config/database");
 
@@ -15,25 +12,20 @@ async function startServer() {
       console.log(`Smart Inclusive Ed berjalan di http://localhost:${PORT}`);
     });
 
-    // Penanganan penghentian server
-    process.on("SIGINT", () => {
+    function shutdown() {
       server.close(async () => {
         await pool.end();
         console.log("Server dan koneksi database ditutup.");
         process.exit(0);
       });
-    });
+    }
+
+    process.once("SIGINT", shutdown);
+    process.once("SIGTERM", shutdown);
   } catch (error) {
-    console.error("Server gagal dijalankan karena database tidak tersedia.");
+    console.error("Server gagal dijalankan:", error);
     process.exit(1);
   }
 }
-app.use(
-  cors({
-    origin: "https://smart-inclusive-ed-app.vercel.app",
-    credentials: true,
-  }),
-);
 
-app.use(express.json());
 startServer();

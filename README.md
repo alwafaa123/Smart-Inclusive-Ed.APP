@@ -77,6 +77,32 @@ npm run dev
 
 ---
 
+## 🚀 Deploy ke Railway dan Vercel
+
+Frontend dan backend harus di-deploy sebagai dua layanan terpisah:
+
+1. **Railway (backend):** hubungkan repositori dan atur Root Directory ke
+   `backend`. Perintah start adalah `npm start`. Tambahkan environment variables
+   `NODE_ENV=production`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`,
+   `DB_NAME`, dan `SESSION_SECRET`. Gunakan database MySQL yang dapat diakses
+   dari Railway; skema database dan migrasi proyek harus sudah diterapkan.
+   Buat `SESSION_SECRET` acak minimal 32 karakter dan jangan mengubahnya setiap
+   deploy. Atur `FRONTEND_URL` ke origin Vercel lengkap, misalnya
+   `https://nama-aplikasi.vercel.app` (tanpa garis miring di akhir). Biarkan
+   Railway menyediakan `PORT`.
+2. **Vercel (frontend):** atur Root Directory ke `frontend`, framework ke
+   Next.js, lalu tambahkan `BACKEND_API_URL` dengan URL API Railway yang berakhiran
+   `/api`, misalnya `https://nama-layanan.up.railway.app/api`. Deploy ulang setelah
+   variabel lingkungan diubah.
+3. Setelah kedua layanan aktif, periksa
+   `https://nama-layanan.up.railway.app/api/health` dan
+   `https://nama-aplikasi.vercel.app/api/health`. Login memakai sesi cookie
+   `HttpOnly`; aplikasi tidak menggunakan JWT atau token di `localStorage`.
+
+Jangan masukkan kredensial database atau `SESSION_SECRET` ke Git.
+
+---
+
 ### 🗄️ Database MySQL
 
 Backend membutuhkan MySQL. Nyalakan MySQL (misalnya melalui XAMPP), lalu pastikan pengaturan `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, dan `DB_NAME` di `backend/.env` sesuai dengan konfigurasi lokal.
