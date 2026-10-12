@@ -3,6 +3,7 @@ const MySQLStore = require("express-mysql-session")(session);
 const { pool } = require("./database");
 
 const sessionMaxAge = Number(process.env.SESSION_MAX_AGE) || 7 * 24 * 60 * 60 * 1000;
+const isProduction = process.env.NODE_ENV === "production";
 const sessionSecret = process.env.SESSION_SECRET;
 if (
   !sessionSecret ||
@@ -35,9 +36,9 @@ const sessionMiddleware = session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    // Browser requests use the same-origin Vercel API proxy, so Lax is sufficient.
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
     maxAge: sessionMaxAge,
   },
 });
