@@ -7,6 +7,7 @@ import { apiRequest } from "@/services/api";
 export default function ProtectedRoute({ allowedRoles, children }) {
   const router = useRouter();
   const [status, setStatus] = useState("loading"); // loading | authorized | forbidden | error
+  const allowedRolesKey = allowedRoles.join("|");
 
   useEffect(() => {
     let active = true;
@@ -16,7 +17,7 @@ export default function ProtectedRoute({ allowedRoles, children }) {
         const result = await apiRequest("/auth/me");
         if (!active) return;
 
-        if (!allowedRoles.includes(result.user?.role)) {
+        if (!allowedRolesKey.split("|").includes(result.user?.role)) {
           setStatus("forbidden");
         } else {
           setStatus("authorized");
@@ -33,7 +34,7 @@ export default function ProtectedRoute({ allowedRoles, children }) {
 
     checkSession();
     return () => { active = false; };
-  }, [allowedRoles, router]);
+  }, [allowedRolesKey, router]);
 
   /* ── Loading ──────────────────────────────────────────────────────────── */
   if (status === "loading") {

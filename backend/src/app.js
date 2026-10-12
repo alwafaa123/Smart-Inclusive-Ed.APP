@@ -19,6 +19,8 @@ const app = express();
 const frontendOrigin =
   process.env.FRONTEND_URL || "http://localhost:3000";
 
+app.set("trust proxy", 1);
+
 function isLocalDevelopmentOrigin(origin) {
   try {
     const url = new URL(origin);
