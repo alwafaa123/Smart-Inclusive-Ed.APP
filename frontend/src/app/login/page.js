@@ -1,13 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiRequest } from "@/services/api";
 
 export default function LoginPage() {
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -24,26 +21,36 @@ export default function LoginPage() {
     }
 
     setLoading(true);
+    let loginCompleted = false;
     try {
-      const result = await apiRequest("/login", {
+      await apiRequest("/login", {
         method: "POST",
         body: JSON.stringify({ email: email.trim(), password }),
       });
+      loginCompleted = true;
 
+      const session = await apiRequest("/auth/me");
+      const role = session.user?.role;
       const roleRoutes = {
         admin:   "/dashboard/admin",
         teacher: "/dashboard/guru",
         student: "/dashboard/siswa",
       };
-      const destination = roleRoutes[result.user.role];
+      const destination = roleRoutes[role];
       if (!destination) {
-        setError("Peran akun tidak dikenali.");
+        setError(
+          role
+            ? "Peran akun tidak dikenali."
+            : "Login berhasil, tetapi sesi belum tersimpan. Silakan coba lagi.",
+        );
         return;
       }
-      router.replace(destination);
+      window.location.replace(destination);
     } catch (err) {
       if (err.status === 401) {
-        setError("Email atau password salah.");
+        setError(loginCompleted
+          ? "Login berhasil, tetapi sesi tidak ditemukan. Pastikan server backend sudah diperbarui dan coba lagi."
+          : "Email atau password salah.");
       } else if (err.status === 403) {
         setError("Akun ini sedang dinonaktifkan. Hubungi administrator.");
       } else {
