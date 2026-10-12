@@ -70,9 +70,7 @@ export default function Home() {
   useEffect(() => {
     async function checkBackend() {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5200/api"}/health`,
-        );
+        const res = await fetch("/api/health");
         if (!res.ok) throw new Error("Server memberikan respons error.");
         const data = await res.json();
         setServerMsg(data.message || "Server berjalan normal.");

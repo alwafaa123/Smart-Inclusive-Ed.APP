@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5200/api";
+const API_BASE_PATH = "/api";
 
 export async function apiRequest(endpoint, options = {}) {
   const isFormData =
@@ -8,7 +8,7 @@ export async function apiRequest(endpoint, options = {}) {
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const response = await fetch(`${API_BASE_PATH}${endpoint}`, {
     ...options,
     credentials: "include",
     headers,
@@ -32,7 +32,7 @@ export async function apiRequest(endpoint, options = {}) {
 }
 
 export async function downloadAttachment(endpoint, filename) {
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const response = await fetch(`${API_BASE_PATH}${endpoint}`, {
     credentials: "include",
   });
 
