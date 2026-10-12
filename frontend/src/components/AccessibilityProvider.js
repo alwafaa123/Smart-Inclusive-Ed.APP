@@ -34,11 +34,14 @@ export function AccessibilityProvider({ children }) {
   const [loadingPreferences, setLoadingPreferences] = useState(true);
   const [error,              setError]              = useState("");
 
+  const fetchPreferences = useCallback(async () => {
+    const data = await apiRequest("/preferences/me");
+    return normalizePrefs(data.preferences);
+  }, []);
+
   const loadPreferences = useCallback(async () => {
     try {
-      // API mengembalikan { preferences: { font_size, … } }
-      const data = await apiRequest("/preferences/me");
-      setPreferences(normalizePrefs(data.preferences));
+      setPreferences(await fetchPreferences());
       setError("");
     } catch (err) {
       // 401 = belum login; jangan tampilkan error
@@ -48,11 +51,33 @@ export function AccessibilityProvider({ children }) {
     } finally {
       setLoadingPreferences(false);
     }
-  }, []);
+  }, [fetchPreferences]);
 
   useEffect(() => {
-    loadPreferences();
-  }, [loadPreferences]);
+    let isMounted = true;
+
+    fetchPreferences()
+      .then((loadedPreferences) => {
+        if (isMounted) {
+          setPreferences(loadedPreferences);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted && err.status !== 401) {
+          setError(err.message || "Preferensi belum dapat dimuat.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoadingPreferences(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchPreferences]);
 
   const updatePreferences = useCallback(
     async (changes) => {
