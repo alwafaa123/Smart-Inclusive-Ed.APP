@@ -1,5 +1,7 @@
 require("dotenv").config();
-
+const express = require("express");
+const cors = require("cors");
+const app = express();
 const app = require("./src/app");
 const { testConnection, pool } = require("./src/config/database");
 
@@ -26,5 +28,12 @@ async function startServer() {
     process.exit(1);
   }
 }
+app.use(
+  cors({
+    origin: "https://smart-inclusive-ed-app.vercel.app",
+    credentials: true,
+  }),
+);
 
+app.use(express.json());
 startServer();
