@@ -25,7 +25,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const result = await apiRequest("/auth/login", {
+      const result = await apiRequest("/login", {
         method: "POST",
         body: JSON.stringify({ email: email.trim(), password }),
       });
