@@ -11,6 +11,7 @@ export async function apiRequest(endpoint, options = {}) {
   const response = await fetch(`${API_BASE_PATH}${endpoint}`, {
     ...options,
     credentials: "include",
+    cache: "no-store",
     headers,
   });
 
@@ -34,6 +35,7 @@ export async function apiRequest(endpoint, options = {}) {
 export async function downloadAttachment(endpoint, filename) {
   const response = await fetch(`${API_BASE_PATH}${endpoint}`, {
     credentials: "include",
+    cache: "no-store",
   });
 
   if (!response.ok) {

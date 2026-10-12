@@ -16,6 +16,8 @@ const HOP_BY_HOP_HEADERS = new Set([
   "upgrade",
 ]);
 
+export const runtime = "nodejs";
+
 async function proxyRequest(request, context) {
   const { path = [] } = await context.params;
   const incomingUrl = new URL(request.url);
@@ -56,6 +58,7 @@ async function proxyRequest(request, context) {
       responseHeaders.set(name, value);
     }
   }
+  responseHeaders.set("cache-control", "no-store");
 
   for (const cookie of upstream.headers.getSetCookie()) {
     responseHeaders.append("set-cookie", cookie);
